@@ -177,7 +177,7 @@ public static class SeedingDataExtension
             new Emotion { Name = "Phobia" },
             new Emotion { Name = "Delirium" },
             new Emotion { Name = "Fatigue" },
-            new Emotion { Name = "PTSD" }
+            new Emotion { Name = "Functional Disorder" }
         };
 
         await _dbContext.Emotions.AddRangeAsync(emotions);
@@ -259,169 +259,169 @@ public static class SeedingDataExtension
 
     }
 
-    public static List<PatientTherapistData> GetTrainingData()
+    public static List<PatientTherapistTraining> GetTrainingData()
     {
-        return new List<PatientTherapistData>
+        return new List<PatientTherapistTraining>
         {
-        // Addiction Treatment (5 cases)
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.9f, 0.5f, 0.8f, 0.3f, 0.2f, 0.4f, 0.1f, 0.0f, 0.1f, 0.2f }),
-                TherapistSpecializationId = 1
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates =  JsonConvert
-                                 .SerializeObject(new float[] { 0.85f, 0.55f, 0.75f, 0.25f, 0.15f, 0.35f, 0.2f, 0.0f, 0.2f, 0.1f }),
-                TherapistSpecializationId = 1
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.8f, 0.6f, 0.9f, 0.35f, 0.25f, 0.3f, 0.3f, 0.1f, 0.3f, 0.2f }),
-                TherapistSpecializationId = 1
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.75f, 0.45f, 0.85f, 0.2f, 0.2f, 0.4f, 0.1f, 0.0f, 0.15f, 0.05f }),
-                TherapistSpecializationId = 1
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.7f, 0.4f, 0.9f, 0.3f, 0.25f, 0.35f, 0.25f, 0.05f, 0.2f, 0.15f }),
-                TherapistSpecializationId = 1
-            },
+        //// Addiction Treatment (5 cases)
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.9f, 0.5f, 0.8f, 0.3f, 0.2f, 0.4f, 0.1f, 0.0f, 0.1f, 0.2f }),
+        //        TherapistSpecializationId = 1
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.85f, 0.55f, 0.75f, 0.25f, 0.15f, 0.35f, 0.2f, 0.0f, 0.2f, 0.1f }),
+        //        TherapistSpecializationId = 1
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.8f, 0.6f, 0.9f, 0.35f, 0.25f, 0.3f, 0.3f, 0.1f, 0.3f, 0.2f }),
+        //        TherapistSpecializationId = 1
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.75f, 0.45f, 0.85f, 0.2f, 0.2f, 0.4f, 0.1f, 0.0f, 0.15f, 0.05f }),
+        //        TherapistSpecializationId = 1
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.7f, 0.4f, 0.9f, 0.3f, 0.25f, 0.35f, 0.25f, 0.05f, 0.2f, 0.15f }),
+        //        TherapistSpecializationId = 1
+        //    },
 
-        // Trauma Therapy (5 cases)
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.7f, 0.9f, 0.2f, 0.8f, 0.9f, 0.8f, 0.6f, 0.2f, 0.1f, 0.15f }),
-                TherapistSpecializationId = 2
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.65f, 0.85f, 0.25f, 0.75f, 0.85f, 0.75f, 0.65f, 0.25f, 0.1f, 0.1f }),
-                TherapistSpecializationId = 2
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.6f, 0.8f, 0.3f, 0.7f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f }),
-                TherapistSpecializationId = 2
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.75f, 0.9f, 0.35f, 0.85f, 0.85f, 0.85f, 0.7f, 0.3f, 0.2f, 0.25f }),
-                TherapistSpecializationId = 2
-            },
-            new PatientTherapistData
-            {
-                EmotionalStates = JsonConvert
-                                 .SerializeObject(new float[] { 0.8f, 0.75f, 0.4f, 0.75f, 0.8f, 0.75f, 0.65f, 0.4f, 0.25f, 0.3f }),
-                TherapistSpecializationId = 2
-            },
+        //// Trauma Therapy (5 cases)
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.7f, 0.9f, 0.2f, 0.8f, 0.9f, 0.8f, 0.6f, 0.2f, 0.1f, 0.15f }),
+        //        TherapistSpecializationId = 2
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.65f, 0.85f, 0.25f, 0.75f, 0.85f, 0.75f, 0.65f, 0.25f, 0.1f, 0.1f }),
+        //        TherapistSpecializationId = 2
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.6f, 0.8f, 0.3f, 0.7f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f }),
+        //        TherapistSpecializationId = 2
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.75f, 0.9f, 0.35f, 0.85f, 0.85f, 0.85f, 0.7f, 0.3f, 0.2f, 0.25f }),
+        //        TherapistSpecializationId = 2
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.8f, 0.75f, 0.4f, 0.75f, 0.8f, 0.75f, 0.65f, 0.4f, 0.25f, 0.3f }),
+        //        TherapistSpecializationId = 2
+        //    },
 
-        // Child Therapy (5 cases)
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.2f, 0.3f, 0.2f, 0.6f, 0.7f, 0.5f, 0.8f, 0.7f, 0.6f, 0.4f }),
-            TherapistSpecializationId = 3
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.25f, 0.4f, 0.15f, 0.55f, 0.65f, 0.6f, 0.75f, 0.6f, 0.55f, 0.45f }),
-            TherapistSpecializationId = 3
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.3f, 0.35f, 0.25f, 0.5f, 0.6f, 0.55f, 0.7f, 0.65f, 0.55f, 0.4f }),
-            TherapistSpecializationId = 3
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.35f, 0.45f, 0.1f, 0.45f, 0.55f, 0.6f, 0.7f, 0.55f, 0.6f, 0.35f }),
-            TherapistSpecializationId = 3
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.4f, 0.5f, 0.3f, 0.4f, 0.5f, 0.55f, 0.65f, 0.6f, 0.55f, 0.35f }),
-            TherapistSpecializationId = 3
-        },
+        //    // Child Therapy (5 cases)
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.2f, 0.3f, 0.2f, 0.6f, 0.7f, 0.5f, 0.8f, 0.7f, 0.6f, 0.4f }),
+        //        TherapistSpecializationId = 3
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.25f, 0.4f, 0.15f, 0.55f, 0.65f, 0.6f, 0.75f, 0.6f, 0.55f, 0.45f }),
+        //        TherapistSpecializationId = 3
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.3f, 0.35f, 0.25f, 0.5f, 0.6f, 0.55f, 0.7f, 0.65f, 0.55f, 0.4f }),
+        //        TherapistSpecializationId = 3
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.35f, 0.45f, 0.1f, 0.45f, 0.55f, 0.6f, 0.7f, 0.55f, 0.6f, 0.35f }),
+        //        TherapistSpecializationId = 3
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.4f, 0.5f, 0.3f, 0.4f, 0.5f, 0.55f, 0.65f, 0.6f, 0.55f, 0.35f }),
+        //        TherapistSpecializationId = 3
+        //    },
 
-        // Family Therapy (5 cases)
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.4f, 0.5f, 0.4f, 0.3f, 0.6f, 0.65f, 0.55f, 0.4f, 0.45f, 0.55f }),
-            TherapistSpecializationId = 4
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.35f, 0.6f, 0.45f, 0.35f, 0.7f, 0.55f, 0.5f, 0.45f, 0.55f, 0.6f }),
-            TherapistSpecializationId = 4
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.3f, 0.4f, 0.35f, 0.4f, 0.65f, 0.6f, 0.6f, 0.5f, 0.5f, 0.65f }),
-            TherapistSpecializationId = 4
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.45f, 0.55f, 0.5f, 0.45f, 0.5f, 0.55f, 0.6f, 0.55f, 0.4f, 0.6f }),
-            TherapistSpecializationId = 4
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.5f, 0.6f, 0.55f, 0.5f, 0.55f, 0.6f, 0.65f, 0.6f, 0.5f, 0.65f }),
-            TherapistSpecializationId = 4
-        },
+        //    // Family Therapy (5 cases)
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.4f, 0.5f, 0.4f, 0.3f, 0.6f, 0.65f, 0.55f, 0.4f, 0.45f, 0.55f }),
+        //        TherapistSpecializationId = 4
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.35f, 0.6f, 0.45f, 0.35f, 0.7f, 0.55f, 0.5f, 0.45f, 0.55f, 0.6f }),
+        //        TherapistSpecializationId = 4
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.3f, 0.4f, 0.35f, 0.4f, 0.65f, 0.6f, 0.6f, 0.5f, 0.5f, 0.65f }),
+        //        TherapistSpecializationId = 4
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.45f, 0.55f, 0.5f, 0.45f, 0.5f, 0.55f, 0.6f, 0.55f, 0.4f, 0.6f }),
+        //        TherapistSpecializationId = 4
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.5f, 0.6f, 0.55f, 0.5f, 0.55f, 0.6f, 0.65f, 0.6f, 0.5f, 0.65f }),
+        //        TherapistSpecializationId = 4
+        //    },
 
-        // Counseling (5 cases)
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.25f, 0.3f, 0.25f, 0.35f, 0.4f, 0.45f, 0.55f, 0.5f, 0.45f, 0.6f }),
-            TherapistSpecializationId = 5
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.3f, 0.4f, 0.3f, 0.4f, 0.45f, 0.5f, 0.6f, 0.55f, 0.4f, 0.55f }),
-            TherapistSpecializationId = 5
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.35f, 0.35f, 0.35f, 0.45f, 0.5f, 0.55f, 0.65f, 0.55f, 0.45f, 0.5f }),
-            TherapistSpecializationId = 5
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates = JsonConvert
-                             .SerializeObject(new float[] { 0.4f, 0.45f, 0.4f, 0.5f, 0.55f, 0.6f, 0.65f, 0.6f, 0.5f, 0.55f }),
-            TherapistSpecializationId = 5
-        },
-        new PatientTherapistData
-        {
-            EmotionalStates =  JsonConvert
-                             .SerializeObject(new float[] { 0.45f, 0.5f, 0.45f, 0.55f, 0.6f, 0.65f, 0.7f, 0.65f, 0.55f, 0.6f }),
-            TherapistSpecializationId = 5
-        }
-    };
+        //    // Counseling (5 cases)
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.25f, 0.3f, 0.25f, 0.35f, 0.4f, 0.45f, 0.55f, 0.5f, 0.45f, 0.6f }),
+        //        TherapistSpecializationId = 5
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.3f, 0.4f, 0.3f, 0.4f, 0.45f, 0.5f, 0.6f, 0.55f, 0.4f, 0.55f }),
+        //        TherapistSpecializationId = 5
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.35f, 0.35f, 0.35f, 0.45f, 0.5f, 0.55f, 0.65f, 0.55f, 0.45f, 0.5f }),
+        //        TherapistSpecializationId = 5
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates = JsonConvert
+        //                         .SerializeObject(new float[] { 0.4f, 0.45f, 0.4f, 0.5f, 0.55f, 0.6f, 0.65f, 0.6f, 0.5f, 0.55f }),
+        //        TherapistSpecializationId = 5
+        //    },
+        //    new PatientTherapistTraining
+        //    {
+        //        EmotionalStates =  JsonConvert
+        //                         .SerializeObject(new float[] { 0.45f, 0.5f, 0.45f, 0.55f, 0.6f, 0.65f, 0.7f, 0.65f, 0.55f, 0.6f }),
+        //        TherapistSpecializationId = 5
+        //    }
+        };
     }
 }

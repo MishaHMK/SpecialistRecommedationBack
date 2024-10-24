@@ -8,24 +8,12 @@ using System.Text;
 using TherapyApp;
 using TherapyApp.Entities;
 using TherapyApp.Extensions;
+using TherapyApp.Helpers.ML;
 using TherapyApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-//builder.Services.AddIdentityCore<AppUser>(opt =>
-//{
-//    opt.User.RequireUniqueEmail = true;
-//    opt.SignIn.RequireConfirmedEmail = true;
-//})
-//            .AddDefaultTokenProviders()
-//            .AddRoles<IdentityRole>()
-//            .AddRoleManager<RoleManager<IdentityRole>>()
-//            .AddSignInManager<SignInManager<AppUser>>()
-//            .AddRoleValidator<RoleValidator<IdentityRole>>()
-//            .AddEntityFrameworkStores<TherapyDbContext>();
-
 
 builder.Services.AddDbContext<TherapyDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -78,6 +66,9 @@ builder.Services.AddSwaggerGen(o =>
 
 builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IJWTService, JWTService>();
+builder.Services.AddScoped<ICsvService, CsvService>();
+builder.Services.AddScoped<MLModelTrainer>();
+builder.Services.AddScoped<MLModelPredictor>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
@@ -118,7 +109,7 @@ builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
 
 var app = builder.Build();
 
-await app.SeedDataAsync();
+//await app.SeedDataAsync();
 
 if (app.Environment.IsDevelopment())
 {

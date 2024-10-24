@@ -15,7 +15,7 @@ public class TherapyDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Speciality> Specialities { get; set; }
     public DbSet<Therapist> TherapistUsers { get; set; }
-    public DbSet<PatientTherapistData> PatientTherapistData { get; set; }
+    public DbSet<PatientTherapistTraining> PatientTherapistData { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
