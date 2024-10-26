@@ -8,7 +8,7 @@
         public DateTime? StartDate { get; set; }
         public bool? IsOnline { get; set; }
         public bool? IsCancelled { get; set; }
-        public int? ClientId { get; set; }
+        public string? ClientId { get; set; }
         public AppUser? Client { get; set; }
         public int? TherapistId { get; set; }
         public Therapist? Therapist { get; set; }

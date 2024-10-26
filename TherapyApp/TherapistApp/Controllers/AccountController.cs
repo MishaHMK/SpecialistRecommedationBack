@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TherapyApp.Entities;
 using TherapyApp.Helpers.Auth;
+using TherapyApp.Helpers.Dto;
 using TherapyApp.Services;
 
 namespace TherapyApp.Controllers
@@ -14,17 +17,19 @@ namespace TherapyApp.Controllers
     {
         private readonly IAccountService _accService;
         private readonly IJWTService _jWTManager;
+        private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly TherapyDbContext _db;
 
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IMapper mapper,
                                IAccountService accService, IJWTService jWTManager, TherapyDbContext db)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _accService = accService;
             _jWTManager = jWTManager;
+            _mapper = mapper;
             _db = db;
         }
 
@@ -115,50 +120,83 @@ namespace TherapyApp.Controllers
         }
 
         // POST api/Account/authenticate
+        //[AllowAnonymous]
+        //[HttpPost]
+        //[Route("authenticate")]
+        //public async Task<ActionResult> Authenticate([FromBody] Login model)
+        //{
+        //    var user = await _userManager.FindByNameAsync(model.Email);
+
+        //    var roles = await _userManager.GetRolesAsync(user);
+
+        //    if (user.EmailConfirmed == true)
+        //    {
+        //        var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, true);
+
+        //        if (result.IsLockedOut)
+        //        {
+        //            return BadRequest("Account-Locked");
+        //        }
+        //        if (!result.Succeeded)
+        //        {
+        //            return BadRequest("Login-InCorrectPassword");
+        //        }
+
+
+        //        var token = _jWTManager.Authenticate(user.Id, user.UserName, roles);
+
+        //        if (token == null)
+        //        {
+        //            return Unauthorized();
+        //        }
+
+        //        user.LastActive = DateTime.Now;
+        //        await _accService.SaveAllAsync();
+
+        //        return Ok(token);
+        //    }
+
+        //    else return BadRequest("Your email hasn't been confirmed");
+        //}
+
+        // POST api/Account/authenticate
         [AllowAnonymous]
         [HttpPost]
         [Route("authenticate")]
         public async Task<ActionResult> Authenticate([FromBody] Login model)
         {
-            var user = await _userManager.FindByNameAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email) ??
+               throw new ArgumentException("User not found");
 
-            var roles = await _userManager.GetRolesAsync(user);
-
-            if (user.EmailConfirmed == true)
+            var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, false, true);
+            if (!signInResult.Succeeded)
             {
-                //await _signInManager.SignInAsync(user, isPersistent: true);
-
-                var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, true);
-
-                //var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, true);
-
-                if (result.IsLockedOut)
-                {
-                    return BadRequest("Account-Locked");
-                }
-                if (!result.Succeeded)
-                {
-                    return BadRequest("Login-InCorrectPassword");
-                }
-
-
-                var token = _jWTManager.Authenticate(user.Id, user.UserName, roles);
-
-                if (token == null)
-                {
-                    return Unauthorized();
-                }
-
-                user.LastActive = DateTime.Now;
-                await _accService.SaveAllAsync();
-
-                return Ok(token);
+                throw new InvalidOperationException("Incorrect login data");
             }
 
-            else return BadRequest("Your email hasn't been confirmed");
+            var jwtResult = await _jWTManager.CreateJwtTokenAsync(user) ??
+                throw new InvalidOperationException("Jwt token generation failed");
+
+
+            var userData = _mapper.Map<UserDataDto>(user) ??
+                throw new InvalidOperationException("Mapping from User to UserDataDto failed");
+
+
+            if (jwtResult.TokenString == null)
+            {
+                throw new InvalidOperationException("Invalid token ");
+            }
+
+            var result = new LoginResultDto
+            {
+                Token = jwtResult.TokenString,
+                User = userData
+            };
+
+            return Ok(result);
         }
 
-        // GET api/Account/authenticate
+        // GET api/Account/users
         [HttpGet]
         [Route("users")]
         public async Task<List<AppUser>> GetAllUsers()

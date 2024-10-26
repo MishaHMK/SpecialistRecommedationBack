@@ -1,13 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System;
-using System.Text;
+using Microsoft.IdentityModel.JsonWebTokens;
 using TherapyApp;
 using TherapyApp.Entities;
 using TherapyApp.Extensions;
+using TherapyApp.Helpers.Mapper;
 using TherapyApp.Helpers.ML;
 using TherapyApp.Services;
 
@@ -34,74 +31,19 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 }
 ));
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(o =>
-{
-    o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme.\nExample: 'Bearer {your token}'"
-    });
-
-    o.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
-});
-
-builder.Services.AddTransient<IAccountService, AccountService>();
-builder.Services.AddTransient<IJWTService, JWTService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddScoped<ICsvService, CsvService>();
 builder.Services.AddScoped<MLModelTrainer>();
 builder.Services.AddScoped<MLModelPredictor>();
+builder.Services.AddSingleton<JsonWebTokenHandler>();
+builder.Services.AddAutoMapper(typeof(UsersProfile));
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
-    {
-        var Key = Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]);
-        o.SaveToken = true;
-        o.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidIssuer = builder.Configuration["JWT:Issuer"],
-            ValidAudience = builder.Configuration["JWT:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Key)
-        };
-
-        o.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accsessToken = context.Request.Query["access_token"];
-
-                var path = context.HttpContext.Request.Path;
-
-                if (!string.IsNullOrEmpty(accsessToken) && path.StartsWithSegments("/hubs"))
-                {
-                    context.Token = accsessToken;
-                }
-
-                return Task.CompletedTask;
-            }
-        };
-    });
-
+builder.Services.ConfigureJwt(builder);
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddJwtAuthentication(builder);
+builder.Services.AddSwaggerServices();
 
 builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore

@@ -315,10 +315,7 @@ namespace TherapyApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ClientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ClientId1")
+                    b.Property<string>("ClientId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool?>("IsCancelled")
@@ -341,31 +338,11 @@ namespace TherapyApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId1");
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("TherapistId");
 
                     b.ToTable("Meetings");
-                });
-
-            modelBuilder.Entity("TherapyApp.Entities.PatientTherapistData", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("EmotionalStates")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TherapistSpecializationId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PatientTherapistData");
                 });
 
             modelBuilder.Entity("TherapyApp.Entities.Speciality", b =>
@@ -500,7 +477,7 @@ namespace TherapyApp.Migrations
                 {
                     b.HasOne("TherapyApp.Entities.AppUser", "Client")
                         .WithMany()
-                        .HasForeignKey("ClientId1");
+                        .HasForeignKey("ClientId");
 
                     b.HasOne("TherapyApp.Entities.Therapist", "Therapist")
                         .WithMany()

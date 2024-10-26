@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using TherapyApp.Entities;
+using TherapyApp.Helpers.Dto;
 
 namespace TherapyApp.Controllers
 {
@@ -29,29 +31,24 @@ namespace TherapyApp.Controllers
             }
             try
             {
-                //Get token from header
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-                //Decode token
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
-                //Get userid
-                var userId = jsonToken?.Claims.First(claim => claim.Type == "NameIdentifier").Value;
+                var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
                 if (string.IsNullOrEmpty(userId))
                 {
                     return BadRequest("Invalid token");
                 }
 
-                // Створення користувацького об'єкта
                 var newDiary = new Diary()
                 {
                     UserId = userId,
                     User = await _db.Users.Where(u => u.Id == userId).SingleOrDefaultAsync()
                 };
 
-                // Збереження користувацького об'єкта
                 await _db.Diaries.AddAsync(newDiary);
                 await _db.SaveChangesAsync();
 
@@ -67,7 +64,7 @@ namespace TherapyApp.Controllers
         [Authorize]
         [HttpPost]
         [Route("add")]
-        public async Task<IActionResult> AddDiaryEntry([FromBody] DiaryEntry model)
+        public async Task<IActionResult> AddDiaryEntry([FromBody] DiaryEntryDto model)
         {
             if (!ModelState.IsValid)
             {
@@ -83,7 +80,7 @@ namespace TherapyApp.Controllers
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
                 //Get userid
-                var userId = jsonToken?.Claims.First(claim => claim.Type == "NameIdentifier").Value;
+                var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
                 var diary = await _db.Diaries.Where(d => d.UserId == userId).FirstOrDefaultAsync();
 
@@ -96,18 +93,22 @@ namespace TherapyApp.Controllers
                     return BadRequest("Invalid token");
                 }
 
+                var emote = await _db.Emotions.Where(e => e.Id == model.EmotionId).FirstOrDefaultAsync();
+                if (emote == null)
+                {
+                    return BadRequest("Emotion doesn't exist");
+                }
+
                 var newEntry = new DiaryEntry()
                 {
                     Description = model.Description,
                     CreatedAt = DateTime.UtcNow,
-                    IsPrivate = model.IsPrivate,
                     DiaryId = diary.Id,
                     Diary = diary,
                     EmotionId = model.EmotionId,
-                    Emotion = await _db.Emotions.Where(e => e.Id == model.EmotionId).FirstOrDefaultAsync(),    
+                    Emotion = emote,    
                 };
 
-                // Збереження користувацького об'єкта
                 await _db.DiaryEntries.AddAsync(newEntry);
                 await _db.SaveChangesAsync();
 

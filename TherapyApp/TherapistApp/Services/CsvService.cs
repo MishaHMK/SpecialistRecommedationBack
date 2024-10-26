@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Globalization;
+using System.IO;
 using Newtonsoft.Json;
 using TherapyApp.Entities;
 
@@ -10,22 +11,54 @@ namespace TherapyApp.Services
         {
             using (var writer = new StreamWriter(filePath))
             {
-                // Write CSV header
                 writer.WriteLine(
                     "Anxiety,Depression,Addiction,Panic,PTSD,Anger,Phobia,Delirium,Fatigue,FunctionalDisorder,TherapistSpecializationId");
 
-                // Write each row of data
                 foreach (var data in trainingData)
                 {
-                    // Deserialize the JSON string back to float[] (emotional states)
-                    var emotionalStates = data.EmotionalStates;
+                    var emotionalStates = data.EmotionalStates
+                            .Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                            .ToArray();
 
-                    // Create a line with emotional states followed by TherapistSpecializationId
                     var line = string.Join(",", emotionalStates) + $",{data.TherapistSpecializationId}";
                     writer.WriteLine(line);
                 }
             }
         }
+
+
+        public List<PatientTherapistTraining> LoadTrainingDataFromCsv(string filePath)
+        {
+            var trainingData = new List<PatientTherapistTraining>();
+
+            using (var reader = new StreamReader(filePath))
+            {
+                reader.ReadLine();
+
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    if (line == null) continue;
+
+                    var values = line.Split(',');
+
+                    var emotionalStates = values.Take(10)
+                        .Select(v => float.Parse(v, CultureInfo.InvariantCulture)) 
+                        .ToArray();
+
+                    var therapistSpecializationId = int.Parse(values[10], CultureInfo.InvariantCulture);
+
+                    trainingData.Add(new PatientTherapistTraining
+                    {
+                        EmotionalStates = emotionalStates,
+                        TherapistSpecializationId = therapistSpecializationId
+                    });
+                }
+            }
+
+            return trainingData;
+        }
+
 
         public List<PatientTherapistTraining> GetTrainingData()
         {

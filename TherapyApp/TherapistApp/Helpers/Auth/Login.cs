@@ -5,12 +5,10 @@ namespace TherapyApp.Helpers.Auth
     public class Login
     {
         [Required]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
-
-        public bool RememberMe { get; set; }
+        public string Password { get; set; } = null!;
     }
 }

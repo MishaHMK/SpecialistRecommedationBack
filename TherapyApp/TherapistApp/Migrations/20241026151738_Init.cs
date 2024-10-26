@@ -70,20 +70,6 @@ namespace TherapyApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PatientTherapistData",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EmotionalStates = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TherapistSpecializationId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PatientTherapistData", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Specialities",
                 columns: table => new
                 {
@@ -288,16 +274,15 @@ namespace TherapyApp.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsOnline = table.Column<bool>(type: "bit", nullable: true),
                     IsCancelled = table.Column<bool>(type: "bit", nullable: true),
-                    ClientId = table.Column<int>(type: "int", nullable: true),
-                    ClientId1 = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    ClientId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     TherapistId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Meetings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Meetings_AspNetUsers_ClientId1",
-                        column: x => x.ClientId1,
+                        name: "FK_Meetings_AspNetUsers_ClientId",
+                        column: x => x.ClientId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
@@ -362,9 +347,9 @@ namespace TherapyApp.Migrations
                 column: "EmotionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Meetings_ClientId1",
+                name: "IX_Meetings_ClientId",
                 table: "Meetings",
-                column: "ClientId1");
+                column: "ClientId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Meetings_TherapistId",
@@ -406,9 +391,6 @@ namespace TherapyApp.Migrations
 
             migrationBuilder.DropTable(
                 name: "Meetings");
-
-            migrationBuilder.DropTable(
-                name: "PatientTherapistData");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

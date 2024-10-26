@@ -15,5 +15,5 @@ public class PatientTherapistData
     [LoadColumn(8)] public float Fatigue { get; set; }
     [LoadColumn(9)] public float FunctionalDisorder { get; set; }
 
-    [LoadColumn(10)] public int TherapistSpecializationId { get; set; } //label
+    [LoadColumn(10)] public int TherapistSpecializationId { get; set; } 
 }
