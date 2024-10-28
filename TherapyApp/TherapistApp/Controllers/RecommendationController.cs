@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OpenAI_API.Completions;
+using OpenAI_API;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using TherapyApp.Entities;
-using TherapyApp.Helpers.Dto;
 using TherapyApp.Helpers.ML;
 using TherapyApp.Services;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
+using System.Globalization;
 
 namespace TherapyApp.Controllers
 {
@@ -18,16 +19,16 @@ namespace TherapyApp.Controllers
         private readonly TherapyDbContext _db;
         private readonly MLModelTrainer _mLModelTrainer;
         private readonly MLModelPredictor _mPredictor;
-        private readonly UserManager<AppUser> _userManager;
+        private readonly ChatGptService _chatGptService;
         private readonly ICsvService _csvService;
-        public RecommendationController(TherapyDbContext db, MLModelTrainer mLModelTrainer, UserManager<AppUser> userManager,
-            MLModelPredictor mPredictor, ICsvService csvService)
+        public RecommendationController(TherapyDbContext db, MLModelTrainer mLModelTrainer,
+            MLModelPredictor mPredictor, ICsvService csvService, ChatGptService chatGptService)
         {
             _db = db;
             _mLModelTrainer = mLModelTrainer;
             _mPredictor = mPredictor;
-            _userManager = userManager;
             _csvService = csvService;
+            _chatGptService = chatGptService;
         }
 
         [HttpPost("Save")]
@@ -50,7 +51,6 @@ namespace TherapyApp.Controllers
         {
             try
             {
-                var trainingData1 = _csvService.GetTrainingData();
                 var trainingData = _csvService.LoadTrainingDataFromCsv("training_data.csv");
                 _mLModelTrainer.TrainModel(trainingData, "therapist_model.zip");
                 return Ok("Trained Successfully");
@@ -119,12 +119,85 @@ namespace TherapyApp.Controllers
                 var specId = _mPredictor.Predict("therapist_model.zip", emotionAverages);
                 var res = _db.TherapistUsers.Where(tu => tu.SpecialityId == specId);
 
+                using (var writer = new StreamWriter("training_data.csv", append: true))
+                {
+                    var emotionalStates = emotionAverages
+                           .Select(v => v.ToString(CultureInfo.InvariantCulture))
+                           .ToArray();
+
+                    var line = string.Join(",", emotionalStates) + $",{specId}";
+                    writer.WriteLine(line);
+
+                }
+
                 return Ok(res);
 
             }
             catch (Exception ex)
             {
                 return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [Authorize]
+        [HttpPost("GetAnswer")]
+        public async Task<IActionResult> GetAnswer()
+        {
+            try
+            {
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+                var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                var diary = await _db.Diaries.Where(d => d.UserId == userId).FirstOrDefaultAsync();
+
+                if (diary == null)
+                {
+                    return BadRequest("Diary doesn't exist");
+                }
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return BadRequest("Invalid token");
+                }
+
+                var emotions = await _db.DiaryEntries
+                    .Where(e => e.DiaryId == diary.Id && 
+                                   e.CreatedAt >= DateTime.Now.AddDays(-10))
+                    .Include(e => e.Emotion)
+                    .OrderByDescending(e => e.Value)
+                    .ToListAsync();
+
+
+                var distinctEmotionNames = emotions
+                    .GroupBy(e => e.EmotionId)
+                    .Select(g => g.First().Emotion.Name)
+                    .Take(3)
+                    .ToList();
+
+                if (distinctEmotionNames == null)
+                {
+                    return BadRequest("No recent diary entries");
+                }
+
+                var promptVar = String.Empty;
+
+                foreach (var e in distinctEmotionNames)
+                {
+                    promptVar += $" {e}";
+                }
+
+                var prompt = $"Which basic, brief 5 tips would you recommend " +
+                    $"with my mental conditions: {promptVar}?";
+
+                var answer = await _chatGptService.GetConciseAnswer(prompt);
+                return Ok(answer);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
         }
     }

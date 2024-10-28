@@ -1,6 +1,4 @@
 ﻿using Microsoft.ML;
-using Microsoft.ML.Trainers;
-using Microsoft.ML.Trainers.LightGbm;
 using TherapyApp.Entities;
 
 namespace TherapyApp.Helpers.ML;

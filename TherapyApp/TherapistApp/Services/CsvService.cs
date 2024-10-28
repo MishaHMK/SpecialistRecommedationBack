@@ -17,7 +17,7 @@ namespace TherapyApp.Services
                 foreach (var data in trainingData)
                 {
                     var emotionalStates = data.EmotionalStates
-                            .Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                            .Select(v => v.ToString(CultureInfo.InvariantCulture))
                             .ToArray();
 
                     var line = string.Join(",", emotionalStates) + $",{data.TherapistSpecializationId}";
@@ -58,7 +58,6 @@ namespace TherapyApp.Services
 
             return trainingData;
         }
-
 
         public List<PatientTherapistTraining> GetTrainingData()
         {
