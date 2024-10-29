@@ -26,7 +26,6 @@ namespace TherapyApp.Services
             }
         }
 
-
         public List<PatientTherapistTraining> LoadTrainingDataFromCsv(string filePath)
         {
             var trainingData = new List<PatientTherapistTraining>();

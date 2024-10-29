@@ -1,4 +1,4 @@
-using DotnetGeminiSDK;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -41,12 +41,6 @@ builder.Services.AddScoped<MLModelTrainer>();
 builder.Services.AddScoped<MLModelPredictor>();
 builder.Services.AddSingleton<JsonWebTokenHandler>();
 builder.Services.AddAutoMapper(typeof(UsersProfile));
-
-builder.Services.AddGeminiClient(config =>
-{
-    config.ApiKey = "AIzaSyBiHnx-6kF_yEoY_JJ15S0Cj11ocbFsi4A";
-});
-
 builder.Services.ConfigureJwt(builder); 
 builder.Services.ConfigureGpt(builder);
 builder.Services.AddControllers();
@@ -55,6 +49,13 @@ builder.Services.AddJwtAuthentication(builder);
 builder.Services.AddSwaggerServices();
 
 builder.Services.AddScoped<ChatGptService>();
+
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(connectionString);
+});
+
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
@@ -69,6 +70,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHangfireDashboard("/dash");
+
+RecurringJob.AddOrUpdate<MLModelTrainer>(
+    recurringJobId: "TrainModelDaily",
+    methodCall: trainer => trainer.TrainModelFromCsv("training_data.csv", "therapist_model.zip"),
+    cronExpression: Cron.Daily
+);
 
 app.UseCors(options => options.WithOrigins("http://localhost:3000")
                                 .AllowAnyMethod().AllowAnyHeader().AllowCredentials());

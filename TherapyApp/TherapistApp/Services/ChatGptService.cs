@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using TherapyApp.Helpers.Secrets;
-using DotnetGeminiSDK;
-using DotnetGeminiSDK.Client.Interfaces;
-using DotnetGeminiSDK.Client;
-using DotnetGeminiSDK.Model.Response;
 
 public class ChatGptService
 {
@@ -17,22 +13,16 @@ public class ChatGptService
     private readonly GptVariables _gptEnvironment;
     private readonly string _apiUrl;
     private readonly string _apiKey;
-    private readonly IGeminiClient _geminiClient;
 
-    public ChatGptService(HttpClient httpClient, IOptions<GptVariables> gptEnvironment, IGeminiClient geminiClient)
+    public ChatGptService(HttpClient httpClient, IOptions<GptVariables> gptEnvironment)
     {
-        _geminiClient = geminiClient;
         _httpClient = httpClient;
         _gptEnvironment = gptEnvironment.Value;
         _apiKey = _gptEnvironment.Secret ?? throw new InvalidOperationException("API Key not configured");
         _apiUrl = _gptEnvironment.Url ?? throw new InvalidOperationException("API Url not configured");
-        //_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-        //_httpClient.DefaultRequestHeaders.Remove("Authorization");
-        //_httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
-
-        public async Task<string> GetConciseAnswer(string prompt)
-        {
+    public async Task<string> GetConciseAnswer(string prompt)
+    {
         var requestBody = new
         {
             model = "gpt-3.5-turbo",

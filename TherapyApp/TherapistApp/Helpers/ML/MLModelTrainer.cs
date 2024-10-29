@@ -1,15 +1,18 @@
 ﻿using Microsoft.ML;
 using TherapyApp.Entities;
+using TherapyApp.Services;
 
 namespace TherapyApp.Helpers.ML;
 
 public class MLModelTrainer
 {
     private readonly MLContext _mlContext;
+    private readonly ICsvService _csvService;
 
-    public MLModelTrainer()
+    public MLModelTrainer(ICsvService csvService)
     {
         _mlContext = new MLContext();
+        _csvService = csvService;
     }
 
     public void TrainModel(List<PatientTherapistTraining> trainingData, string modelPath)
@@ -24,5 +27,11 @@ public class MLModelTrainer
         var model = pipeline.Fit(trainingDataView);
 
         _mlContext.Model.Save(model, trainingDataView.Schema, modelPath);
+    }
+
+    public void TrainModelFromCsv(string csvFilePath, string modelFilePath)
+    {
+        var trainingData = _csvService.LoadTrainingDataFromCsv(csvFilePath);
+        TrainModel(trainingData, modelFilePath);
     }
 }
