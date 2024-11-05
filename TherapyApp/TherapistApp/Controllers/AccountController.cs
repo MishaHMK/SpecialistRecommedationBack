@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ML;
+using System.Linq;
 using TherapyApp.Entities;
 using TherapyApp.Helpers.Auth;
 using TherapyApp.Helpers.Dto;
@@ -42,7 +44,7 @@ namespace TherapyApp.Controllers
             return Ok(roleList);
         }
 
-        // GET: api/Account/users/id
+        // GET: api/Account/user/id
         [HttpGet]
         [Route("user/{id}")]
         public async Task<IActionResult> GetUserById(string id)
@@ -72,6 +74,7 @@ namespace TherapyApp.Controllers
                 {
                     var user = new AppUser
                     {
+                        Id = Guid.NewGuid().ToString(),
                         UserName = model.Email,
                         FirstName = model.FirstName,
                         LastName = model.LastName,
@@ -91,7 +94,7 @@ namespace TherapyApp.Controllers
                         {
                             var newTherapist = new Therapist
                             {
-                                Introduction = model.Introduction,
+                                Introduction = model.Introduction ?? string.Empty,
                                 SpecialityId = model.SpecialityId,
                                 UserId = user.Id
                             };
@@ -119,47 +122,7 @@ namespace TherapyApp.Controllers
             return BadRequest("Email is already exists");
         }
 
-        // POST api/Account/authenticate
-        //[AllowAnonymous]
-        //[HttpPost]
-        //[Route("authenticate")]
-        //public async Task<ActionResult> Authenticate([FromBody] Login model)
-        //{
-        //    var user = await _userManager.FindByNameAsync(model.Email);
-
-        //    var roles = await _userManager.GetRolesAsync(user);
-
-        //    if (user.EmailConfirmed == true)
-        //    {
-        //        var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, true);
-
-        //        if (result.IsLockedOut)
-        //        {
-        //            return BadRequest("Account-Locked");
-        //        }
-        //        if (!result.Succeeded)
-        //        {
-        //            return BadRequest("Login-InCorrectPassword");
-        //        }
-
-
-        //        var token = _jWTManager.Authenticate(user.Id, user.UserName, roles);
-
-        //        if (token == null)
-        //        {
-        //            return Unauthorized();
-        //        }
-
-        //        user.LastActive = DateTime.Now;
-        //        await _accService.SaveAllAsync();
-
-        //        return Ok(token);
-        //    }
-
-        //    else return BadRequest("Your email hasn't been confirmed");
-        //}
-
-        // POST api/Account/authenticate
+        // POST api/        /authenticate
         [AllowAnonymous]
         [HttpPost]
         [Route("authenticate")]
@@ -213,5 +176,75 @@ namespace TherapyApp.Controllers
             return Ok();
         }
 
+        [HttpGet]
+        [Route("therapists")]
+        public Task<IActionResult> GetTherapists(int page = 1, int pageSize = 10, string? specialization = null)
+        {
+            try
+            {
+                // Fetch all therapists in the role "Therapist"
+                var therapistsQuery = _userManager.GetUsersInRoleAsync("Therapist").Result.AsQueryable();
+
+                // Apply specialization filter if provided
+                if (!string.IsNullOrEmpty(specialization))
+                {
+                    therapistsQuery = therapistsQuery.Where(t =>
+                        _db.TherapistUsers.Any(tu => tu.UserId == t.Id &&
+                            _db.Specialities.Any(s => s.Id == tu.SpecialityId && s.Name == specialization)));
+                }
+
+                // Get the total count of therapists matching the filter (before pagination)
+                var totalTherapists = therapistsQuery.Count();
+
+                // Apply pagination
+                var paginatedTherapists = therapistsQuery
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                // Transform the result into a list of therapists with necessary fields
+                var therapistList = paginatedTherapists
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.FirstName,
+                        t.LastName,
+                        Introduction = _db.TherapistUsers
+                            .Where(x => x.UserId == t.Id)
+                            .Select(x => x.Introduction)
+                            .FirstOrDefault(),
+                        SpecialityName = _db.Specialities
+                            .Where(x => x.Id == _db.TherapistUsers
+                                .Where(x => x.UserId == t.Id)
+                                .Select(x => x.SpecialityId)
+                                .FirstOrDefault())
+                            .Select(x => x.Name)
+                            .FirstOrDefault()
+                    })
+                    .ToList();
+
+                // Return the paginated list and total count
+                return Task.FromResult<IActionResult>(Ok(new
+                {
+                    therapists = therapistList,
+                    total = totalTherapists
+                }));
+            }
+            catch (Exception)
+            {
+                return Task.FromResult<IActionResult>(StatusCode(500, "An error occurred while retrieving therapists."));
+            }
+        }
+        [HttpGet]
+        [Route("specs")]
+        public async Task<IActionResult> GetSpecializations()
+        {
+            var specList = await _db.Specialities.
+                Select(x => x.Name).
+                ToListAsync();
+
+            return Ok(specList);
+        }
     }
+
 }

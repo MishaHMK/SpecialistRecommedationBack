@@ -12,7 +12,7 @@ using TherapyApp;
 namespace TherapyApp.Migrations
 {
     [DbContext(typeof(TherapyDbContext))]
-    [Migration("20241026151738_Init")]
+    [Migration("20241105164222_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -319,6 +319,7 @@ namespace TherapyApp.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClientId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool?>("IsCancelled")
@@ -330,8 +331,9 @@ namespace TherapyApp.Migrations
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("TherapistId")
-                        .HasColumnType("int");
+                    b.Property<string>("TherapistId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
@@ -480,11 +482,15 @@ namespace TherapyApp.Migrations
                 {
                     b.HasOne("TherapyApp.Entities.AppUser", "Client")
                         .WithMany()
-                        .HasForeignKey("ClientId");
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.HasOne("TherapyApp.Entities.Therapist", "Therapist")
+                    b.HasOne("TherapyApp.Entities.AppUser", "Therapist")
                         .WithMany()
-                        .HasForeignKey("TherapistId");
+                        .HasForeignKey("TherapistId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Client");
 

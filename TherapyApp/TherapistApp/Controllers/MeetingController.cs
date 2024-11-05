@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using TherapyApp.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ML;
+using System.Security.Claims;
 
 namespace TherapyApp.Controllers
 {
@@ -57,8 +59,8 @@ namespace TherapyApp.Controllers
                     IsCancelled = false,
                     ClientId = userId,
                     Client = _db.Users.Where(u => u.Id == userId).FirstOrDefault(),
-                    TherapistId = therapistId,
-                    Therapist = therapist
+                    TherapistId = therapist.UserId,
+                    Therapist = _db.Users.Where(u => u.Id == therapist.UserId).FirstOrDefault()
                 };
 
                 await _db.Meetings.AddAsync(newMeeting);
@@ -90,6 +92,17 @@ namespace TherapyApp.Controllers
             var meeting = await _db.Meetings.ToListAsync();
 
             return Ok(meeting);
+        }
+
+        [Authorize]
+        [HttpGet("list")]
+        public async Task<IActionResult> GetUserMeetings()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var meetings = await _db.Meetings
+                .Where(m => m.ClientId.Equals(userId) || m.TherapistId.Equals(userId))
+                .ToListAsync();
+            return Ok(meetings);
         }
     }
 }

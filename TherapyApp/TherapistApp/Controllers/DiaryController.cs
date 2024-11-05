@@ -106,7 +106,8 @@ namespace TherapyApp.Controllers
                     DiaryId = diary.Id,
                     Diary = diary,
                     EmotionId = model.EmotionId,
-                    Emotion = emote,    
+                    Emotion = emote,
+                    Value = model.Value
                 };
 
                 await _db.DiaryEntries.AddAsync(newEntry);
@@ -121,14 +122,92 @@ namespace TherapyApp.Controllers
         }
 
 
-        // GET: api/Diary/entries/id
+        // GET: api/Diary/entries/id?page=1&pageSize=10
         [HttpGet]
         [Route("entries/{id}")]
-        public async Task<IActionResult> GetAllDiaryEntries(int id)
+        public async Task<IActionResult> GetAllDiaryEntries(int id, int page = 1, int pageSize = 10)
         {
-            var entriesList = await _db.DiaryEntries.Where(e => e.DiaryId == id).ToListAsync();
+            // Validate page and pageSize
+            if (page <= 0 || pageSize <= 0)
+            {
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
 
-            return Ok(entriesList);
+            var query = _db.DiaryEntries
+                           .Where(e => e.DiaryId == id)
+                           .Include(x => x.Emotion);
+
+            // Get the total count of entries
+            var totalCount = await query.CountAsync();
+
+            // Apply pagination
+            var entriesList = await query
+                                .OrderByDescending(e => e.CreatedAt)
+                                .Skip((page - 1) * pageSize)
+                                .Take(pageSize)
+                                .ToListAsync();
+
+            // Return paginated result along with total count
+            var result = new
+            {
+                TotalCount = totalCount,
+                Entries = entriesList
+            };
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("mydiary")]
+        public async Task<IActionResult> GetMyDiaryId()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            //Get userid
+            var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+            var diaryId = await _db.Diaries
+                                    .Where(d => d.UserId == userId)
+                                    .Select(x => x.Id)
+                                    .FirstOrDefaultAsync();
+
+            return Ok(diaryId);
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("entryremove/{id}")]
+        public async Task<IActionResult> DeleteEntryById(int id)
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+            var entryToDelete = await _db.DiaryEntries.Where(d => d.Id == id)
+                                                     .FirstOrDefaultAsync();
+            if (entryToDelete == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            var diary = await _db.Diaries.Where(d => d.Id == entryToDelete.DiaryId)
+                                                     .FirstOrDefaultAsync();
+
+            if (diary == null || diary.UserId != userId)
+            {
+                throw new NotSupportedException();
+            }
+
+            _db.DiaryEntries.Remove(entryToDelete);
+            _db.SaveChanges();
+
+            return Ok();
         }
     }
 }

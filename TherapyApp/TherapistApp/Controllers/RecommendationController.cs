@@ -46,7 +46,7 @@ namespace TherapyApp.Controllers
             }
         }
 
-        [HttpPost("Train")]
+        [HttpGet("Train")]
         public IActionResult TrainModel()
         {
             try
@@ -61,7 +61,7 @@ namespace TherapyApp.Controllers
             }
         }
 
-        [HttpPost("Predict")]
+        [HttpGet("Predict")]
         public IActionResult PredictSpec()
         {
             try
@@ -77,7 +77,7 @@ namespace TherapyApp.Controllers
         }
 
         [Authorize]
-        [HttpPost]
+        [HttpGet]
         [Route("Recommendation")]
         public async Task<IActionResult> GetRecommendation()
         {
@@ -117,7 +117,9 @@ namespace TherapyApp.Controllers
                 }
 
                 var specId = _mPredictor.Predict("therapist_model.zip", emotionAverages);
-                var res = _db.TherapistUsers.Where(tu => tu.SpecialityId == specId);
+                var res = _db.TherapistUsers.Where(tu => tu.SpecialityId == specId)
+                    .Include(x => x.User)
+                    .Include(x => x.Speciality);
 
                 using (var writer = new StreamWriter("training_data.csv", append: true))
                 {
@@ -140,7 +142,7 @@ namespace TherapyApp.Controllers
         }
 
         [Authorize]
-        [HttpPost("GetAnswer")]
+        [HttpGet("GetAnswer")]
         public async Task<IActionResult> GetAnswer()
         {
             try

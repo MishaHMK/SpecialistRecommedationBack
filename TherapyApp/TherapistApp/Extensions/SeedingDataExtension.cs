@@ -19,6 +19,7 @@ public static class SeedingDataExtension
         await SeedEmotions();
         await SeedUsers(app);
         await SeedDiary(app);
+        await SeedMeetings(app);
 
         await _dbContext.SaveChangesAsync();
     }
@@ -174,6 +175,91 @@ public static class SeedingDataExtension
         await _dbContext.Emotions.AddRangeAsync(emotions);
 
         await _dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedMeetings(WebApplication app)
+    {
+
+        using (var scope = app.Services.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+                var therapists = userManager.GetUsersInRoleAsync("Therapist").Result.AsQueryable().Take(2);
+                var firstTherapist = therapists.FirstOrDefault();
+                var secondTherapist = therapists.Skip(1).FirstOrDefault();
+
+                var patients = userManager.GetUsersInRoleAsync("Therapist").Result.AsQueryable().Take(2);
+                var firstPatient = patients.FirstOrDefault();
+                var secondPatient = patients.Skip(1).FirstOrDefault();
+
+                List<Meeting>? meetings = new List<Meeting>()
+                {
+                new Meeting
+                {
+                    Title = "Therapy Session 1",
+                    Url = "Some link",
+                    StartDate = DateTime.UtcNow.AddDays(5),
+                    IsOnline = true,
+                    IsCancelled = false,
+                    ClientId = firstPatient.Id,
+                    TherapistId = firstTherapist.Id
+                },
+                new Meeting
+                {
+                    Title = "Therapy Session 2",
+                    Url = "Some link 2",
+                    StartDate = DateTime.UtcNow.AddDays(6),
+                    IsOnline = false,
+                    IsCancelled = false,
+                    ClientId = secondPatient.Id,
+                    TherapistId = firstTherapist.Id
+                },
+                new Meeting
+                {
+                    Title = "Therapy Session 3",
+                    Url = "Some link 3",
+                    StartDate = DateTime.UtcNow.AddDays(7),
+                    IsOnline = false,
+                    IsCancelled = false,
+                    ClientId = firstPatient.Id,
+                    TherapistId = firstTherapist.Id
+                },
+                new Meeting
+                {
+                    Title = "Therapy Session 4",
+                    Url = "Some link 4",
+                    StartDate = DateTime.UtcNow.AddDays(8),
+                    IsOnline = false,
+                    IsCancelled = false,
+                    ClientId = secondPatient.Id,
+                    TherapistId = secondTherapist.Id
+                },
+                new Meeting
+                {
+                    Title = "Therapy Session 5",
+                    Url = "Some link 5",
+                    StartDate = DateTime.UtcNow.AddDays(9),
+                    IsOnline = true,
+                    IsCancelled = false,
+                    ClientId = firstPatient.Id,
+                    TherapistId = secondTherapist.Id
+                },
+                new Meeting
+                {
+                    Title = "Therapy Session 6",
+                    Url = "Some link 6",
+                    StartDate = DateTime.UtcNow.AddDays(9),
+                    IsOnline = true,
+                    IsCancelled = false,
+                    ClientId = secondPatient.Id,
+                    TherapistId = secondTherapist.Id
+                }
+            };
+
+            await _dbContext.Meetings.AddRangeAsync(meetings);
+
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     private static async Task SeedDiary(WebApplication app)
