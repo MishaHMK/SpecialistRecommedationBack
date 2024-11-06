@@ -10,9 +10,9 @@
         public bool? IsCancelled { get; set; }
 
         public string ClientId { get; set; } = null!;
-        public AppUser Client { get; set; } = null!;
+        public AppUser? Client { get; set; } = null!;
 
         public string TherapistId { get; set; } = null!;
-        public AppUser Therapist { get; set; } = null!;
+        public AppUser? Therapist { get; set; } = null!;
     }
 }

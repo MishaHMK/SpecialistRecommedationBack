@@ -72,14 +72,11 @@ namespace TherapyApp.Controllers
             }
             try
             {
-                //Get token from header
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-                //Decode token
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
-                //Get userid
                 var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
                 var diary = await _db.Diaries.Where(d => d.UserId == userId).FirstOrDefaultAsync();
@@ -127,7 +124,6 @@ namespace TherapyApp.Controllers
         [Route("entries/{id}")]
         public async Task<IActionResult> GetAllDiaryEntries(int id, int page = 1, int pageSize = 10)
         {
-            // Validate page and pageSize
             if (page <= 0 || pageSize <= 0)
             {
                 return BadRequest("Page and pageSize must be greater than 0.");
@@ -137,17 +133,14 @@ namespace TherapyApp.Controllers
                            .Where(e => e.DiaryId == id)
                            .Include(x => x.Emotion);
 
-            // Get the total count of entries
             var totalCount = await query.CountAsync();
 
-            // Apply pagination
             var entriesList = await query
                                 .OrderByDescending(e => e.CreatedAt)
                                 .Skip((page - 1) * pageSize)
                                 .Take(pageSize)
                                 .ToListAsync();
 
-            // Return paginated result along with total count
             var result = new
             {
                 TotalCount = totalCount,
@@ -176,6 +169,31 @@ namespace TherapyApp.Controllers
 
             return Ok(diaryId);
         }
+
+
+        [HttpGet]
+        [Route("existdiary")]
+        public async Task<IActionResult> IfDiaryExists()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+            var diary= await _db.Diaries
+                                    .Where(d => d.UserId == userId)
+                                    .FirstOrDefaultAsync();
+
+            if (diary == null)
+            {
+                return Ok(false);
+            }
+
+            return Ok(true);
+        }
+
 
         [Authorize]
         [HttpDelete]

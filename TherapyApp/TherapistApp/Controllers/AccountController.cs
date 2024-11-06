@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using TherapyApp.Entities;
 using TherapyApp.Helpers.Auth;
 using TherapyApp.Helpers.Dto;
@@ -182,10 +184,8 @@ namespace TherapyApp.Controllers
         {
             try
             {
-                // Fetch all therapists in the role "Therapist"
                 var therapistsQuery = _userManager.GetUsersInRoleAsync("Therapist").Result.AsQueryable();
 
-                // Apply specialization filter if provided
                 if (!string.IsNullOrEmpty(specialization))
                 {
                     therapistsQuery = therapistsQuery.Where(t =>
@@ -193,10 +193,8 @@ namespace TherapyApp.Controllers
                             _db.Specialities.Any(s => s.Id == tu.SpecialityId && s.Name == specialization)));
                 }
 
-                // Get the total count of therapists matching the filter (before pagination)
                 var totalTherapists = therapistsQuery.Count();
 
-                // Apply pagination
                 var paginatedTherapists = therapistsQuery
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -223,7 +221,6 @@ namespace TherapyApp.Controllers
                     })
                     .ToList();
 
-                // Return the paginated list and total count
                 return Task.FromResult<IActionResult>(Ok(new
                 {
                     therapists = therapistList,
@@ -244,6 +241,52 @@ namespace TherapyApp.Controllers
                 ToListAsync();
 
             return Ok(specList);
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+            var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+            var user = await _userManager.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    TherapistInfo = u.TherapistUser != null ? new
+                    {
+                        u.TherapistUser.Introduction,
+                        SpecialityName = u.TherapistUser.Speciality != null ? u.TherapistUser.Speciality.Name : null
+                    } : null
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var roles = await _userManager.GetRolesAsync(await _userManager.FindByIdAsync(userId));
+            var role = roles.FirstOrDefault();
+
+            var response = new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                Role = role,
+                TherapistInfo = user.TherapistInfo
+            };
+
+            return Ok(response);
         }
     }
 

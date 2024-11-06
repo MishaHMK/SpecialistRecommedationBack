@@ -38,17 +38,11 @@ namespace TherapyApp.Controllers
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
                 //Get userid
-                var userId = jsonToken?.Claims.First(claim => claim.Type == "NameIdentifier").Value;
+                var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
                 if (string.IsNullOrEmpty(userId))
                 {
                     return BadRequest("Invalid token");
-                }
-
-                var therapist = _db.TherapistUsers.Where(t => t.Id == therapistId).FirstOrDefault();
-                if (therapist == null)
-                {
-                    return BadRequest("Therapist Not Found");
                 }
 
                 var newMeeting = new Meeting()
@@ -59,8 +53,8 @@ namespace TherapyApp.Controllers
                     IsCancelled = false,
                     ClientId = userId,
                     Client = _db.Users.Where(u => u.Id == userId).FirstOrDefault(),
-                    TherapistId = therapist.UserId,
-                    Therapist = _db.Users.Where(u => u.Id == therapist.UserId).FirstOrDefault()
+                    TherapistId = model.TherapistId,
+                    Therapist = _db.Users.Where(u => u.Id == model.TherapistId).FirstOrDefault()
                 };
 
                 await _db.Meetings.AddAsync(newMeeting);
@@ -103,6 +97,26 @@ namespace TherapyApp.Controllers
                 .Where(m => m.ClientId.Equals(userId) || m.TherapistId.Equals(userId))
                 .ToListAsync();
             return Ok(meetings);
+        }
+
+        [Authorize]
+        [HttpDelete]
+        [Route("delete/{id}")]
+        public async Task<IActionResult> DeleteMeetingById(int id)
+        {
+
+            var meetingToDelete = await _db.Meetings.Where(d => d.Id == id)
+                                                     .FirstOrDefaultAsync();
+
+            if(meetingToDelete == null)
+            {
+                return NotFound();
+            }
+
+            _db.Meetings.Remove(meetingToDelete);
+            _db.SaveChanges();
+
+            return Ok();
         }
     }
 }
