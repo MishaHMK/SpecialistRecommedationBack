@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OpenAI_API.Completions;
-using OpenAI_API;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using TherapyApp.Helpers.ML;
 using TherapyApp.Services;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using System.Globalization;
 
 namespace TherapyApp.Controllers

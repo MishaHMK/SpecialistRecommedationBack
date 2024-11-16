@@ -118,5 +118,23 @@ namespace TherapyApp.Controllers
 
             return Ok();
         }
+
+        [Authorize]
+        [HttpGet("bookedDates/{id}")]
+        public async Task<IActionResult> GetBookedDates(string therapistId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var bookedDates = await _db.Meetings
+                .Where(m => m.ClientId == userId 
+                         || m.TherapistId == therapistId 
+                         || m.TherapistId == userId
+                )
+                .Select(m => m.StartDate)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(bookedDates);
+        }
     }
 }
