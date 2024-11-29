@@ -16,16 +16,16 @@ namespace TherapyApp.Controllers
         private readonly TherapyDbContext _db;
         private readonly MLModelTrainer _mLModelTrainer;
         private readonly MLModelPredictor _mPredictor;
-        private readonly ChatGptService _chatGptService;
+        private readonly OpenAIService _openAIService;
         private readonly ICsvService _csvService;
         public RecommendationController(TherapyDbContext db, MLModelTrainer mLModelTrainer,
-            MLModelPredictor mPredictor, ICsvService csvService, ChatGptService chatGptService)
+            MLModelPredictor mPredictor, ICsvService csvService, OpenAIService openaiService)
         {
             _db = db;
             _mLModelTrainer = mLModelTrainer;
             _mPredictor = mPredictor;
             _csvService = csvService;
-            _chatGptService = chatGptService;
+            _openAIService = openaiService;
         }
 
         [HttpPost("Save")]
@@ -43,7 +43,7 @@ namespace TherapyApp.Controllers
             }
         }
 
-        [HttpGet("Train")]
+        [HttpPost("Train")]
         public IActionResult TrainModel()
         {
             try
@@ -58,20 +58,20 @@ namespace TherapyApp.Controllers
             }
         }
 
-        [HttpGet("Predict")]
-        public IActionResult PredictSpec()
-        {
-            try
-            {
-                var emotionalStateData = new float[] { 0.65f, 0.8f, 0.2f, 0.75f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f };
-                var result = _mPredictor.Predict("therapist_model.zip", emotionalStateData);
-                return Ok($"Predicted Therapist Specialization: {result}");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred while predicting the spec: {ex.Message}");
-            }
-        }
+        //[HttpGet("Predict")]
+        //public IActionResult PredictSpec()
+        //{
+        //    try
+        //    {
+        //        var emotionalStateData = new float[] { 0.65f, 0.8f, 0.2f, 0.75f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f };
+        //        var result = _mPredictor.Predict("therapist_model.zip", emotionalStateData);
+        //        return Ok($"Predicted Therapist Specialization: {result}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"An error occurred while predicting the spec: {ex.Message}");
+        //    }
+        //}
 
         [Authorize]
         [HttpGet]
@@ -191,7 +191,7 @@ namespace TherapyApp.Controllers
                 var prompt = $"Which basic, brief 5 tips would you recommend " +
                     $"with my mental conditions: {promptVar}?";
 
-                var answer = await _chatGptService.GetConciseAnswer(prompt);
+                var answer = await _openAIService.GetConciseAnswer(prompt);
                 return Ok(answer);
             }
             catch (Exception ex)

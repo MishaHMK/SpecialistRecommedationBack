@@ -19,10 +19,11 @@ public class MLModelTrainer
     {
         IDataView trainingDataView = _mlContext.Data.LoadFromEnumerable(trainingData);
 
-        var pipeline = _mlContext.Transforms.Concatenate("Features", nameof(PatientTherapistTraining.EmotionalStates))
-                        .Append(_mlContext.Transforms.Conversion.MapValueToKey("Label", nameof(PatientTherapistTraining.TherapistSpecializationId)))
-                        .Append(_mlContext.MulticlassClassification.Trainers.SdcaNonCalibrated("Label", "Features"))
-                        .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+        var pipeline = _mlContext.Transforms
+            .Concatenate("Features", nameof(PatientTherapistTraining.EmotionalStates))
+            .Append(_mlContext.Transforms.Conversion.MapValueToKey("Label", nameof(PatientTherapistTraining.TherapistSpecializationId)))
+            .Append(_mlContext.MulticlassClassification.Trainers.SdcaNonCalibrated("Label", "Features"))
+            .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
 
         var model = pipeline.Fit(trainingDataView);
 

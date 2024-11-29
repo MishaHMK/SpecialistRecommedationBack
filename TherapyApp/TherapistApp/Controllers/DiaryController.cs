@@ -120,17 +120,27 @@ namespace TherapyApp.Controllers
 
 
         // GET: api/Diary/entries/id?page=1&pageSize=10
+        [Authorize]
         [HttpGet]
-        [Route("entries/{id}")]
-        public async Task<IActionResult> GetAllDiaryEntries(int id, int page = 1, int pageSize = 10)
+        [Route("entries")]
+        public async Task<IActionResult> GetAllDiaryEntries(int page = 1, int pageSize = 10)
         {
             if (page <= 0 || pageSize <= 0)
             {
                 return BadRequest("Page and pageSize must be greater than 0.");
             }
 
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+            var diaryId = await _db.Diaries.Where(d => d.UserId == userId).Select(d => d.Id).FirstOrDefaultAsync();
+
             var query = _db.DiaryEntries
-                           .Where(e => e.DiaryId == id)
+                           .Where(e => e.DiaryId == diaryId)
                            .Include(x => x.Emotion);
 
             var totalCount = await query.CountAsync();

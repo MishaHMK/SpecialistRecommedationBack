@@ -124,7 +124,7 @@ namespace TherapyApp.Controllers
             return BadRequest("Email is already exists");
         }
 
-        // POST api/        /authenticate
+        // POST api/authenticate
         [AllowAnonymous]
         [HttpPost]
         [Route("authenticate")]

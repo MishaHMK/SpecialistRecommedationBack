@@ -7,19 +7,21 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using TherapyApp.Helpers.Secrets;
 
-public class ChatGptService
+public class OpenAIService
 {
     private readonly HttpClient _httpClient;
-    private readonly GptVariables _gptEnvironment;
+    private readonly OpenAIVariables _openaiEnvironment;
     private readonly string _apiUrl;
     private readonly string _apiKey;
 
-    public ChatGptService(HttpClient httpClient, IOptions<GptVariables> gptEnvironment)
+    public OpenAIService(HttpClient httpClient, IOptions<OpenAIVariables> openAiEnvironment)
     {
         _httpClient = httpClient;
-        _gptEnvironment = gptEnvironment.Value;
-        _apiKey = _gptEnvironment.Secret ?? throw new InvalidOperationException("API Key not configured");
-        _apiUrl = _gptEnvironment.Url ?? throw new InvalidOperationException("API Url not configured");
+        _openaiEnvironment = openAiEnvironment.Value;
+        _apiKey = _openaiEnvironment.Secret 
+            ?? throw new InvalidOperationException("API Key not configured");
+        _apiUrl = _openaiEnvironment.Url 
+            ?? throw new InvalidOperationException("API Url not configured");
     }
     public async Task<string> GetConciseAnswer(string prompt)
     {
@@ -32,16 +34,16 @@ public class ChatGptService
             }
         };
 
-        var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8,
+                                                                    "application/json");
+
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
         try
         {
             var response = await _httpClient.PostAsync(_apiUrl, content);
             response.EnsureSuccessStatusCode();
-
             var responseString = await response.Content.ReadAsStringAsync();
-
             var json = JsonConvert.DeserializeObject<dynamic>(responseString);
             var messageContent = json?.choices[0]?.message?.content?.ToString();
 
@@ -51,12 +53,5 @@ public class ChatGptService
         {
             return $"Error: {ex.Message}";
         }
-    }
-
-    public async Task<string> GetResponseFromOpenAI(string prompt)
-    {
-        var api = new OpenAI_API.OpenAIAPI(_apiKey);
-        var result = await api.Completions.GetCompletion(prompt);
-        return result;
     }
 }

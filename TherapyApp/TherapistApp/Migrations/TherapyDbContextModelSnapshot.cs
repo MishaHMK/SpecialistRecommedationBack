@@ -241,7 +241,8 @@ namespace TherapyApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions
+                    .UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");

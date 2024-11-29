@@ -9,8 +9,8 @@ public static class ConfigureHostBuilderExtensions
         services.Configure<JwtVariables>(builder.Configuration.GetSection("Jwt"));
     }
 
-    public static void ConfigureGpt(this IServiceCollection services, WebApplicationBuilder builder)
+    public static void ConfigureOpenAI(this IServiceCollection services, WebApplicationBuilder builder)
     {
-        services.Configure<GptVariables>(builder.Configuration.GetSection("Gpt"));
+        services.Configure<OpenAIVariables>(builder.Configuration.GetSection("OpenAI"));
     }
 }

@@ -32,7 +32,7 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 }
 ));
 
-builder.Services.AddHttpClient<ChatGptService>();
+builder.Services.AddHttpClient<OpenAIService>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJWTService, JWTService>();
@@ -42,13 +42,13 @@ builder.Services.AddScoped<MLModelPredictor>();
 builder.Services.AddSingleton<JsonWebTokenHandler>();
 builder.Services.AddAutoMapper(typeof(UsersProfile));
 builder.Services.ConfigureJwt(builder); 
-builder.Services.ConfigureGpt(builder);
+builder.Services.ConfigureOpenAI(builder);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddJwtAuthentication(builder);
 builder.Services.AddSwaggerServices();
 
-builder.Services.AddScoped<ChatGptService>();
+builder.Services.AddScoped<OpenAIService>();
 
 builder.Services.AddHangfire(config =>
 {

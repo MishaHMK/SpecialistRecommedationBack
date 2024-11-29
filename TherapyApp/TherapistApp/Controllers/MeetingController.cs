@@ -120,7 +120,7 @@ namespace TherapyApp.Controllers
         }
 
         [Authorize]
-        [HttpGet("bookedDates/{id}")]
+        [HttpGet("bookedDates/{therapistId}")]
         public async Task<IActionResult> GetBookedDates(string therapistId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
