@@ -58,20 +58,20 @@ namespace TherapyApp.Controllers
             }
         }
 
-        //[HttpGet("Predict")]
-        //public IActionResult PredictSpec()
-        //{
-        //    try
-        //    {
-        //        var emotionalStateData = new float[] { 0.65f, 0.8f, 0.2f, 0.75f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f };
-        //        var result = _mPredictor.Predict("therapist_model.zip", emotionalStateData);
-        //        return Ok($"Predicted Therapist Specialization: {result}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"An error occurred while predicting the spec: {ex.Message}");
-        //    }
-        //}
+        [HttpGet("Predict")]
+        public IActionResult PredictSpec()
+        {
+            try
+            {
+                var emotionalStateData = new float[] { 0.65f, 0.8f, 0.2f, 0.75f, 0.9f, 0.7f, 0.55f, 0.3f, 0.15f, 0.2f };
+                var result = _mPredictor.Predict("therapist_model.zip", emotionalStateData);
+                return Ok($"Predicted Therapist Specialization: {result}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while predicting the spec: {ex.Message}");
+            }
+        }
 
         [Authorize]
         [HttpGet]
@@ -81,22 +81,20 @@ namespace TherapyApp.Controllers
             try
             {
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
                 var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
-                var diary = await _db.Diaries.Where(d => d.UserId == userId).FirstOrDefaultAsync();
-
-                if (diary == null)
-                {
-                    return BadRequest("Diary doesn't exist");
-                }
-
                 if (string.IsNullOrEmpty(userId))
                 {
                     return BadRequest("Invalid token");
+                }
+
+                var diary = await _db.Diaries.Where(d => d.UserId == userId).FirstOrDefaultAsync();
+                if (diary == null)
+                {
+                    return BadRequest("Diary doesn't exist");
                 }
 
                 var entries = await _db.DiaryEntries
@@ -104,37 +102,91 @@ namespace TherapyApp.Controllers
                     .Include(e => e.Emotion)
                     .ToListAsync();
 
-                var emotionAverages = new float[10]; 
+                var emotionAverages = new float[10];
                 var groupedEntries = entries.GroupBy(e => e.EmotionId);
 
                 foreach (var group in groupedEntries)
                 {
-                    var emotionId = group.Key - 1; 
-                    emotionAverages[emotionId] = (float)group.Average(e => e.Value); 
+                    var emotionId = group.Key - 1;
+                    emotionAverages[emotionId] = (float)group.Average(e => e.Value);
                 }
 
+                // Predict the therapist specialization
                 var specId = _mPredictor.Predict("therapist_model.zip", emotionAverages);
-                var res = _db.TherapistUsers.Where(tu => tu.SpecialityId == specId)
-                    .Include(x => x.User)
-                    .Include(x => x.Speciality);
+
+                // Find therapists with the predicted specialization
+                var therapists = await _db.TherapistUsers
+                    .Where(tu => tu.SpecialityId == specId)
+                    .Include(t => t.User)
+                    .Include(t => t.Speciality)
+                    .ToListAsync();
+
+                if (!therapists.Any())
+                {
+                    return NotFound("No therapists found with the predicted specialization.");
+                }
+
+                // Find the closest available day with free slots for each therapist
+                var availableTherapist = therapists
+                    .Select(t => new
+                    {
+                        Therapist = t,
+                        ClosestFreeDay = FindClosestFreeDay(t.UserId)
+                    })
+                    .Where(t => t.ClosestFreeDay != null)
+                    .OrderBy(t => t.ClosestFreeDay)
+                    .FirstOrDefault();
+
+                if (availableTherapist == null)
+                {
+                    return NotFound("No available slots found for any therapist.");
+                }
 
                 using (var writer = new StreamWriter("training_data.csv", append: true))
                 {
                     var emotionalStates = emotionAverages
-                           .Select(v => v.ToString(CultureInfo.InvariantCulture))
-                           .ToArray();
+                        .Select(v => v.ToString(CultureInfo.InvariantCulture))
+                        .ToArray();
 
                     var line = string.Join(",", emotionalStates) + $",{specId}";
                     writer.WriteLine(line);
-
                 }
 
-                return Ok(res);
-
+                return Ok(new
+                {
+                    Therapist = availableTherapist.Therapist,
+                    ClosestFreeDay = availableTherapist.ClosestFreeDay
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
+        private DateTime? FindClosestFreeDay(string therapistId)
+        {
+            var currentDate = DateTime.Now.Date.AddDays(1); // Start checking from tomorrow
+            while (true)
+            {
+                // Skip weekends
+                if (currentDate.DayOfWeek == DayOfWeek.Saturday || currentDate.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    currentDate = currentDate.AddDays(1);
+                    continue;
+                }
+
+                // Check if there are free slots (10:00 to 18:00)
+                var hasFreeSlot = Enumerable.Range(10, 9) // Hours from 10 to 18
+                    .Any(hour => !_db.Meetings.Any(m => m.TherapistId == therapistId && 
+                    m.StartDate == currentDate.AddHours(hour)));
+
+                if (hasFreeSlot)
+                {
+                    return currentDate;
+                }
+
+                currentDate = currentDate.AddDays(1); // Move to the next day
             }
         }
 
