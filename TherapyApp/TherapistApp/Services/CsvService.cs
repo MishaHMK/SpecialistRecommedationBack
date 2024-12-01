@@ -170,7 +170,7 @@ namespace TherapyApp.Services
                 TherapistSpecializationId = 4
             },
 
-            // Counseling (5 cases)
+            // Cognitive Therapy (5 cases)
             new PatientTherapistTraining
             {
                 EmotionalStates = new float[] { 0.25f, 0.3f, 0.25f, 0.35f, 0.4f, 0.45f, 0.55f, 0.5f, 0.45f, 0.6f },

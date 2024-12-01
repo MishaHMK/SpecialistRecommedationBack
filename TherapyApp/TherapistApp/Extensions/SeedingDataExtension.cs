@@ -33,7 +33,7 @@ public static class SeedingDataExtension
             new Speciality { Name = "Trauma Therapy", Value = 2.0 },
             new Speciality { Name = "Child Therapy", Value = 3.0 },
             new Speciality { Name = "Family Therapy", Value = 4.0 },
-            new Speciality { Name = "Counseling", Value = 5.0 }
+            new Speciality { Name = "Cognitive Therapy", Value = 5.0 }
         };
 
         await _dbContext.Specialities.AddRangeAsync(specialities);
