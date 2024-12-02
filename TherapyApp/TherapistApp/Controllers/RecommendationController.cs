@@ -241,7 +241,7 @@ namespace TherapyApp.Controllers
                 }
 
                 var prompt = $"Which basic, brief 5 tips would you recommend " +
-                    $"with my mental conditions: {promptVar}?";
+                    $"with my mental conditions: {promptVar}? ";
 
                 var answer = await _openAIService.GetConciseAnswer(prompt);
                 return Ok(answer);

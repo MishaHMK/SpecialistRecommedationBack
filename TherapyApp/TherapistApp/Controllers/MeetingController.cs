@@ -5,6 +5,11 @@ using TherapyApp.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML;
 using System.Security.Claims;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Calendar.v3;
+using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Services;
+using System.IO;
 
 namespace TherapyApp.Controllers
 {
@@ -18,7 +23,6 @@ namespace TherapyApp.Controllers
             _db = db;
         }
 
-        //// POST: api/Meeting/create
         [Authorize]
         [HttpPost]
         [Route("create")]
@@ -30,14 +34,14 @@ namespace TherapyApp.Controllers
             }
             try
             {
-                //Get token from header
+                // Get token from header
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-                //Decode token
+                // Decode token
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
 
-                //Get userid
+                // Get user ID
                 var userId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
                 if (string.IsNullOrEmpty(userId))
@@ -48,7 +52,7 @@ namespace TherapyApp.Controllers
                 var newMeeting = new Meeting()
                 {
                     Title = model.Title,
-                    Url = model.Url,
+                    Url = GenerateGoogleMeetLink(),
                     StartDate = model.StartDate,
                     IsCancelled = false,
                     ClientId = userId,
@@ -64,10 +68,22 @@ namespace TherapyApp.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
+        private string GenerateGoogleMeetLink()
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyz";
+            var random = new Random();
+
+            string GenerateSegment() =>
+                new string(Enumerable.Repeat(chars, 3)
+                    .Select(s => s[random.Next(s.Length)])
+                    .ToArray());
+
+            return $"https://meet.google.com/{GenerateSegment()}-{GenerateSegment()}-{GenerateSegment()}";
+        }
 
         //GET: api/Meeting/id
         [HttpGet]

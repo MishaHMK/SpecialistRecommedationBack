@@ -160,6 +160,114 @@ namespace TherapyApp.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("patients")]
+        public async Task<IActionResult> GetTherapistPatients(int page = 1, int pageSize = 10)
+        {
+            if (page <= 0 || pageSize <= 0)
+            {
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            // Get the therapist's user ID from the token
+            var therapistUserId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+            var therapistRole = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.Role).Value;
+
+            if (string.IsNullOrEmpty(therapistUserId))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+            // Check if the user is a therapist
+            var isTherapist = await _db.Users.AnyAsync(u => u.Id == therapistUserId && therapistRole == "Therapist");
+            if (!isTherapist)
+            {
+                return Forbid("You are not authorized to access this resource.");
+            }
+
+            // Fetch distinct patients from meetings (past and future)
+            var patientsQuery = _db.Meetings
+                .Where(m => m.TherapistId == therapistUserId)
+                .Select(m => m.Client)
+                .Distinct();
+
+            var totalPatients = await patientsQuery.CountAsync();
+
+            var patients = await patientsQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.FirstName,
+                    p.LastName,
+                    p.Email,
+                    p.PhoneNumber
+                })
+                .ToListAsync();
+
+            var result = new
+            {
+                TotalCount = totalPatients,
+                Patients = patients
+            };
+
+            return Ok(result);
+        }
+
+        // GET: api/Diary/patient_entries/id?page=1&pageSize=10
+        [Authorize]
+        [HttpGet]
+        [Route("patient_entries")]
+        public async Task<IActionResult> GetAllPatientEntries(string userId, int page = 1, int pageSize = 10)
+        {
+            if (page <= 0 || pageSize <= 0)
+            {
+                return BadRequest("Page and pageSize must be greater than 0.");
+            }
+
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+            var therapistUserId = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+            var therapistRole = jsonToken?.Claims.First(claim => claim.Type == ClaimTypes.Role).Value;
+            var isTherapist = await _db.Users.AnyAsync(u => u.Id == therapistUserId && therapistRole == "Therapist");
+
+            if (!isTherapist)
+            {
+                return Forbid("You are not authorized to access this resource.");
+            }
+
+
+            var diaryId = await _db.Diaries.Where(d => d.UserId == userId).Select(d => d.Id).FirstOrDefaultAsync();
+
+            var query = _db.DiaryEntries
+                           .Where(e => e.DiaryId == diaryId)
+                           .Include(x => x.Emotion);
+
+            var totalCount = await query.CountAsync();
+
+            var entriesList = await query
+                                .OrderByDescending(e => e.CreatedAt)
+                                .Skip((page - 1) * pageSize)
+                                .Take(pageSize)
+                                .ToListAsync();
+
+            var result = new
+            {
+                TotalCount = totalCount,
+                Entries = entriesList
+            };
+
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("mydiary")]
         public async Task<IActionResult> GetMyDiaryId()
